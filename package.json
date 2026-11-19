@@ -4,14 +4,12 @@
   "private": true,
   "description": "CUSTODIA: Autonomous Clinical Screening-to-Care Custody System",
   "scripts": {
-    "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend install --loglevel=error && npm --prefix frontend run build && node -e \"const fs=require('fs'); if (fs.existsSync('frontend/.next')) fs.cpSync('frontend/.next', '.next', {recursive: true});\"",
-    "start": "npm --prefix frontend run start",
-    "lint": "npm --prefix frontend run lint"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run start",
+    "lint": "cd frontend && npm run lint"
   },
   "dependencies": {
-    "next": "15.1.12",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "15.1.12"
   }
 }
