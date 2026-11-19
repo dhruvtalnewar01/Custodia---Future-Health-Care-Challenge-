@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+asyncpg
+pydantic>=2.8.0
+pyyaml
+python-dotenv
+openai>=1.52.0
+fhir.resources>=7.1.0
+cryptography>=43.0.0
+python-multipart
+websockets
+sse-starlette

@@ -1,0 +1,623 @@
+packs:
+  pack-uae-doh:
+    id: "pack-uae-doh"
+    name: "UAE Department of Health (DoH / Malaffi & Nabidh)"
+    jurisdiction: "United Arab Emirates"
+    regulatory_framework: "UAE Federal Law No. 2 of 2019 / DoH Abu Dhabi Health Information Exchange"
+    supported_languages:
+      - code: "ar"
+        name: "Arabic"
+        direction: "rtl"
+      - code: "en"
+        name: "English"
+        direction: "ltr"
+      - code: "ur"
+        name: "Urdu"
+        direction: "rtl"
+    partner_facilities:
+      - id: "fac-uae-ccad"
+        name: "Cleveland Clinic Abu Dhabi"
+        city: "Abu Dhabi"
+        specialties: ["Oncology", "Breast Surgery", "Endocrinology", "Nephrology", "Genomics"]
+      - id: "fac-uae-ssmc"
+        name: "Sheikh Shakhbout Medical City (SSMC)"
+        city: "Abu Dhabi"
+        specialties: ["Gastroenterology", "Colorectal Surgery", "Cardiology", "Urology"]
+      - id: "fac-uae-bmc"
+        name: "Burjeel Medical City"
+        city: "Mohamed Bin Zayed City"
+        specialties: ["Emergency Medicine", "Nephrology", "Critical Care", "Oncology"]
+      - id: "fac-uae-tawam"
+        name: "Tawam Hospital Al Ain"
+        city: "Al Ain"
+        specialties: ["Oncology", "Palliative Care", "Medical Genetics"]
+    payer_rules:
+      - plan_code: "THIQA"
+        payer_name: "Thiqa (National Health Insurance Company - Daman)"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH"]
+      - plan_code: "DAMAN_ENHANCED"
+        payer_name: "Daman Enhanced Global Network"
+        tier_coverage: 0.90
+        copay_amount_aed: 50
+        requires_preauth: true
+        auto_approve_tiers: ["TIER_1_CRITICAL"]
+      - plan_code: "ENAYA"
+        payer_name: "Enaya Government Health Program"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH"]
+    acuity_rules:
+      BREAST_BIRADS_4:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "DoH Breast Cancer Screening & Diagnostic Pathway 2024"
+        rationale: "Suspicious abnormality with 2% to 95% malignancy likelihood requiring urgent tissue diagnosis within 72 hours"
+      METABOLIC_HBA1C_RENAL:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "DoH IFHAS Comprehensive Metabolic Screening Guidelines"
+        rationale: "HbA1c > 9.0% combined with declining eGFR (<60 mL/min) requires nephrology consult within 72 hours"
+      COLORECTAL_FIT_POS:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "UAE National Colorectal Cancer Screening Standard"
+        rationale: "Quantitative FIT positive (>100 ng/mL) requires diagnostic colonoscopy referral within 72 hours"
+      ELECTROLYTE_CRITICAL:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 24
+        guideline: "DoH Emergency Medical Care & Critical Lab Panic Values Protocol"
+        rationale: "Serum Potassium > 6.0 mmol/L or < 2.8 mmol/L presents immediate cardiac dysrhythmia hazard: 24h statutory SLA"
+      GENOMIC_COUPLE_HBB:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 48
+        guideline: "UAE National Premarital Screening & Genetic Counseling Mandate"
+        rationale: "Dual carrier beta-thalassemia trait status requires urgent genetic counseling prior to marriage certification: 48h SLA"
+      UROLOGY_PSA_ELEVATED:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "DoH Urological Oncology Diagnostic Standards"
+        rationale: "Total PSA > 10.0 ng/mL or age-adjusted PSA elevation requires multiparametric MRI and urology consultation"
+    prerequisite_rules:
+      BREAST_BIRADS_4:
+        - code: "24606-6"
+          name: "Diagnostic Mammogram Bilateral with Tomosynthesis"
+          mandatory: true
+        - code: "24605-8"
+          name: "Targeted Breast Ultrasound Report"
+          mandatory: true
+      METABOLIC_HBA1C_RENAL:
+        - code: "4548-4"
+          name: "Hemoglobin A1c (HbA1c)"
+          mandatory: true
+        - code: "33914-3"
+          name: "Estimated Glomerular Filtration Rate (eGFR)"
+          mandatory: true
+        - code: "14959-1"
+          name: "Spot Urine Albumin-to-Creatinine Ratio (uACR)"
+          mandatory: true
+      COLORECTAL_FIT_POS:
+        - code: "58453-2"
+          name: "Fecal Immunochemical Test (FIT) Quantitative"
+          mandatory: true
+        - code: "57021-8"
+          name: "Complete Blood Count (CBC) with Differential"
+          mandatory: true
+      ELECTROLYTE_CRITICAL:
+        - code: "2823-3"
+          name: "Stat Serum Potassium and Electrolyte Panel"
+          mandatory: true
+        - code: "11524-6"
+          name: "12-Lead Electrocardiogram (ECG)"
+          mandatory: true
+      GENOMIC_COUPLE_HBB:
+        - code: "34533-0"
+          name: "Hemoglobin Electrophoresis (HbA2 and HbF Quantitation)"
+          mandatory: true
+        - code: "718-7"
+          name: "Complete Blood Count (CBC) Erythrocyte Indices (MCV, MCH)"
+          mandatory: true
+        - code: "GENOM-PARTNER-ID"
+          name: "Documented Partner Premarital National Screening Record"
+          mandatory: true
+      UROLOGY_PSA_ELEVATED:
+        - code: "2857-1"
+          name: "Total Prostate-Specific Antigen (PSA)"
+          mandatory: true
+        - code: "10886-0"
+          name: "Free PSA Percentage Ratio"
+          mandatory: true
+        - code: "24356-8"
+          name: "Urinalysis with Microscopic Examination and Culture"
+          mandatory: false
+
+  pack-us-cms:
+    id: "pack-us-cms"
+    name: "US CMS & Integrated Delivery Networks (USPSTF / NCCN)"
+    jurisdiction: "United States"
+    regulatory_framework: "HIPAA / HITECH / 42 CFR Part 2 / CMS Interoperability Rule"
+    supported_languages:
+      - code: "en"
+        name: "English"
+        direction: "ltr"
+      - code: "es"
+        name: "Spanish"
+        direction: "ltr"
+      - code: "zh"
+        name: "Mandarin Chinese"
+        direction: "ltr"
+    partner_facilities:
+      - id: "fac-us-mgh"
+        name: "Massachusetts General Hospital"
+        city: "Boston, MA"
+        specialties: ["Nephrology", "Endocrinology", "Surgical Oncology", "Urology"]
+      - id: "fac-us-mayo"
+        name: "Mayo Clinic Rochester"
+        city: "Rochester, MN"
+        specialties: ["Comprehensive Cancer Center", "Gastroenterology", "Cardiology"]
+      - id: "fac-us-jhu"
+        name: "Johns Hopkins Hospital"
+        city: "Baltimore, MD"
+        specialties: ["Medical Oncology", "Pathology", "Clinical Genetics"]
+    payer_rules:
+      - plan_code: "MEDICARE_B"
+        payer_name: "Medicare Part B (Original Medicare)"
+        tier_coverage: 0.80
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH"]
+      - plan_code: "BCBS_PPO"
+        payer_name: "Blue Cross Blue Shield Choice PPO"
+        tier_coverage: 0.85
+        copay_amount_aed: 40
+        requires_preauth: true
+        auto_approve_tiers: ["TIER_1_CRITICAL"]
+    acuity_rules:
+      BREAST_BIRADS_4:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "ACR / NCCN Breast Screening and Diagnosis Guidelines v2.2024"
+        rationale: "BI-RADS 4 assessment mandates diagnostic mammogram review and core needle biopsy referral"
+      METABOLIC_HBA1C_RENAL:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "ADA / KDIGO Standards of Care in Diabetes & Chronic Kidney Disease"
+        rationale: "Stage 3b CKD with uncontrolled hyperglycemia mandates nephrology co-management within 72 hours"
+      COLORECTAL_FIT_POS:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "USPSTF Colorectal Cancer Screening Recommendation"
+        rationale: "Positive FIT test requires diagnostic colonoscopy completion within 60 days, intake referral within 72h"
+      ELECTROLYTE_CRITICAL:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 24
+        guideline: "CMS Hospital Inpatient Quality Reporting Critical Panic Value Guidelines"
+        rationale: "Imminent life threat from hyperkalemia: urgent intervention within 24h statutory window"
+      GENOMIC_COUPLE_HBB:
+        tier: "TIER_3_ROUTINE"
+        sla_hours: 168
+        guideline: "ACOG Committee Opinion on Carrier Screening for Genetic Conditions"
+        rationale: "Preconception carrier identification requires comprehensive genetic counselor consultation within 7 days"
+      UROLOGY_PSA_ELEVATED:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "AUA / ASTRO Early Detection of Prostate Cancer Guideline"
+        rationale: "PSA > 10 ng/mL warrants multiparametric MRI and expedited urology evaluation"
+    prerequisite_rules:
+      BREAST_BIRADS_4:
+        - code: "24606-6"
+          name: "Diagnostic Mammogram Bilateral with Spot Compression"
+          mandatory: true
+        - code: "24605-8"
+          name: "Targeted Breast Ultrasound Report"
+          mandatory: true
+      METABOLIC_HBA1C_RENAL:
+        - code: "4548-4"
+          name: "Hemoglobin A1c Test"
+          mandatory: true
+        - code: "33914-3"
+          name: "Glomerular Filtration Rate eGFR CKD-EPI formula"
+          mandatory: true
+        - code: "14959-1"
+          name: "Urine Albumin/Creatinine Ratio"
+          mandatory: true
+      COLORECTAL_FIT_POS:
+        - code: "58453-2"
+          name: "FIT Fecal Immunochemical Assay"
+          mandatory: true
+        - code: "57021-8"
+          name: "CBC with Differential"
+          mandatory: true
+      ELECTROLYTE_CRITICAL:
+        - code: "2823-3"
+          name: "Stat Potassium Ion Serum/Plasma"
+          mandatory: true
+        - code: "11524-6"
+          name: "ECG 12-Lead Tracing"
+          mandatory: true
+      GENOMIC_COUPLE_HBB:
+        - code: "34533-0"
+          name: "Hemoglobin Variant Electrophoresis"
+          mandatory: true
+        - code: "718-7"
+          name: "Complete Blood Count RBC Indices"
+          mandatory: true
+      UROLOGY_PSA_ELEVATED:
+        - code: "2857-1"
+          name: "Prostate Specific Ag Total"
+          mandatory: true
+        - code: "10886-0"
+          name: "Free PSA / Total PSA Ratio"
+          mandatory: true
+
+  pack-uk-nhs:
+    id: "pack-uk-nhs"
+    name: "UK NHS England & Integrated Care Boards (2-Week Wait Pathway)"
+    jurisdiction: "United Kingdom"
+    regulatory_framework: "NHS England Cancer Faster Diagnosis Standard (FDS) / UK Data Protection Act 2018"
+    supported_languages:
+      - code: "en"
+        name: "English"
+        direction: "ltr"
+      - code: "cy"
+        name: "Welsh"
+        direction: "ltr"
+      - code: "pl"
+        name: "Polish"
+        direction: "ltr"
+      - code: "bn"
+        name: "Bengali"
+        direction: "ltr"
+    partner_facilities:
+      - id: "fac-uk-gstt"
+        name: "Guy's and St Thomas' NHS Foundation Trust"
+        city: "London"
+        specialties: ["Urology", "Cardiovascular", "Oncology", "Renal Medicine"]
+      - id: "fac-uk-imperial"
+        name: "Imperial College Healthcare NHS Trust"
+        city: "London"
+        specialties: ["Breast Surgery", "Digestive Diseases", "Clinical Haematology"]
+      - id: "fac-uk-cuh"
+        name: "Cambridge University Hospitals NHS Foundation Trust"
+        city: "Cambridge"
+        specialties: ["Medical Genetics", "Oncology", "Endocrinology"]
+    payer_rules:
+      - plan_code: "NHS_STANDARD"
+        payer_name: "National Health Service (NHS England)"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH", "TIER_3_ROUTINE"]
+    acuity_rules:
+      BREAST_BIRADS_4:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "NICE Guideline NG12: Suspected Cancer Recognition and Referral"
+        rationale: "NHS 2-Week Wait suspected breast cancer referral standard: fast-track triage within 72 hours"
+      METABOLIC_HBA1C_RENAL:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "NICE Guideline NG203: Chronic Kidney Disease Assessment and Management"
+        rationale: "Accelerated decline in eGFR combined with persistent proteinuria requires specialist renal triage"
+      COLORECTAL_FIT_POS:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "NHS Bowel Cancer Screening Programme & NICE DG30 Pathway"
+        rationale: "Quantitative FIT score >= 10 ug/g fecal occult blood triggers fast-track lower GI 2WW referral"
+      ELECTROLYTE_CRITICAL:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 24
+        guideline: "NHS Clinical Safety Protocol for Severe Hyperkalaemia"
+        rationale: "Potassium > 6.0 mmol/L requires urgent emergency clinical review within 24 hours"
+      GENOMIC_COUPLE_HBB:
+        tier: "TIER_3_ROUTINE"
+        sla_hours: 168
+        guideline: "NHS Sickle Cell and Thalassaemia (SCT) Screening Programme"
+        rationale: "Couple screening positive for haemoglobinopathy carrier traits requires counseling by 12th week of gestation"
+      UROLOGY_PSA_ELEVATED:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "NICE Guideline NG131: Prostate Cancer Diagnosis and Management"
+        rationale: "Significantly elevated PSA relative to age threshold triggers NHS 2WW urgent urology referral"
+    prerequisite_rules:
+      BREAST_BIRADS_4:
+        - code: "24606-6"
+          name: "NHS Two-View Screening Mammogram Report"
+          mandatory: true
+        - code: "24605-8"
+          name: "Breast Ultrasound Assessment"
+          mandatory: true
+      METABOLIC_HBA1C_RENAL:
+        - code: "4548-4"
+          name: "Venous HbA1c Laboratory Assay"
+          mandatory: true
+        - code: "33914-3"
+          name: "Serum Creatinine and eGFR"
+          mandatory: true
+        - code: "14959-1"
+          name: "Urine Albumin/Creatinine Ratio (uACR)"
+          mandatory: true
+      COLORECTAL_FIT_POS:
+        - code: "58453-2"
+          name: "Faecal Immunochemical Test (FIT) Quantitative"
+          mandatory: true
+        - code: "57021-8"
+          name: "Full Blood Count (FBC) within 90 days"
+          mandatory: true
+      ELECTROLYTE_CRITICAL:
+        - code: "2823-3"
+          name: "Serum Electrolytes Urgent Repeat Panel"
+          mandatory: true
+        - code: "11524-6"
+          name: "12-Lead ECG Report"
+          mandatory: true
+      GENOMIC_COUPLE_HBB:
+        - code: "34533-0"
+          name: "Haemoglobin High-Performance Liquid Chromatography (HPLC)"
+          mandatory: true
+        - code: "718-7"
+          name: "Full Blood Count (FBC) Red Cell Indices"
+          mandatory: true
+      UROLOGY_PSA_ELEVATED:
+        - code: "2857-1"
+          name: "Serum Total PSA Concentration"
+          mandatory: true
+        - code: "10886-0"
+          name: "Free-to-Total PSA Ratio Percentage"
+          mandatory: true
+        - code: "24356-8"
+          name: "Mid-Stream Urine (MSU) Microscopy and Culture"
+          mandatory: true
+
+  pack-in-abdm:
+    id: "pack-in-abdm"
+    name: "India Ayushman Bharat Digital Mission (ABDM & PM-JAY)"
+    jurisdiction: "India"
+    regulatory_framework: "National Health Authority (NHA) ABDM / Digital Personal Data Protection Act 2023"
+    supported_languages:
+      - code: "hi"
+        name: "Hindi"
+        direction: "ltr"
+      - code: "en"
+        name: "English"
+        direction: "ltr"
+      - code: "ta"
+        name: "Tamil"
+        direction: "ltr"
+      - code: "te"
+        name: "Telugu"
+        direction: "ltr"
+      - code: "mr"
+        name: "Marathi"
+        direction: "ltr"
+      - code: "bn"
+        name: "Bengali"
+        direction: "ltr"
+    partner_facilities:
+      - id: "fac-in-aiims"
+        name: "All India Institute of Medical Sciences (AIIMS)"
+        city: "New Delhi"
+        specialties: ["Gastroenterology", "Surgical Oncology", "Cardiology", "Nephrology"]
+      - id: "fac-in-tmc"
+        name: "Tata Memorial Centre"
+        city: "Mumbai"
+        specialties: ["Breast Oncology", "Digestive Oncology", "Radiation Oncology"]
+      - id: "fac-in-apollo"
+        name: "Apollo Hospitals Greams Road"
+        city: "Chennai"
+        specialties: ["Urology", "Organ Transplant", "Clinical Genomics"]
+    payer_rules:
+      - plan_code: "PM_JAY"
+        payer_name: "Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY)"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: true
+        auto_approve_tiers: ["TIER_1_CRITICAL"]
+      - plan_code: "CGHS"
+        payer_name: "Central Government Health Scheme (CGHS)"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH"]
+    acuity_rules:
+      BREAST_BIRADS_4:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "ICMR Clinical Practice Guidelines for Breast Cancer"
+        rationale: "Suspicious breast mass warrants urgent triple-assessment and referral within 72 hours"
+      METABOLIC_HBA1C_RENAL:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "RSSDI / ICMR Guidelines for Management of Type 2 Diabetes & Diabetic Kidney Disease"
+        rationale: "Severe diabetic nephropathy requires specialist nephrology consultation within 72 hours"
+      COLORECTAL_FIT_POS:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "ICMR Guidelines for Management of Colorectal Cancer"
+        rationale: "Positive stool occult blood in screening demands confirmatory lower GI colonoscopy within 72 hours"
+      ELECTROLYTE_CRITICAL:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 24
+        guideline: "National Health Mission Critical Care Lab Action Values"
+        rationale: "Hyperkalemia panic value requires immediate emergency room stabilization within 24 hours"
+      GENOMIC_COUPLE_HBB:
+        tier: "TIER_3_ROUTINE"
+        sla_hours: 168
+        guideline: "National Thalassaemia and Haemoglobinopathies Screening Policy"
+        rationale: "Premarital / antenatal hemoglobinopathy carrier identification requires expert genetic counseling within 7 days"
+      UROLOGY_PSA_ELEVATED:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "Urological Society of India (USI) Prostate Cancer Screening Guidelines"
+        rationale: "Marked PSA elevation requires multiparametric MRI and urology consultation"
+    prerequisite_rules:
+      BREAST_BIRADS_4:
+        - code: "24606-6"
+          name: "Bilateral Screening/Diagnostic Mammography"
+          mandatory: true
+        - code: "24605-8"
+          name: "Targeted High-Resolution Breast Sonography"
+          mandatory: true
+      METABOLIC_HBA1C_RENAL:
+        - code: "4548-4"
+          name: "Glycated Hemoglobin HbA1c HPLC Method"
+          mandatory: true
+        - code: "33914-3"
+          name: "Serum Creatinine with estimated GFR"
+          mandatory: true
+        - code: "14959-1"
+          name: "Urine Microalbumin/Creatinine Ratio"
+          mandatory: true
+      COLORECTAL_FIT_POS:
+        - code: "58453-2"
+          name: "Quantitative Fecal Immunochemical Test (FIT)"
+          mandatory: true
+        - code: "57021-8"
+          name: "Complete Hemogram (CBC)"
+          mandatory: true
+      ELECTROLYTE_CRITICAL:
+        - code: "2823-3"
+          name: "Serum Potassium Stat Test"
+          mandatory: true
+        - code: "11524-6"
+          name: "Standard 12-Lead Electrocardiogram"
+          mandatory: true
+      GENOMIC_COUPLE_HBB:
+        - code: "34533-0"
+          name: "Hemoglobin Variant HPLC Quantitation"
+          mandatory: true
+        - code: "718-7"
+          name: "Complete Hemogram RBC Indices"
+          mandatory: true
+      UROLOGY_PSA_ELEVATED:
+        - code: "2857-1"
+          name: "Total Prostate-Specific Antigen"
+          mandatory: true
+        - code: "10886-0"
+          name: "Free PSA Percentage Ratio"
+          mandatory: true
+
+  pack-genomics-couple:
+    id: "pack-genomics-couple"
+    name: "Premarital & Reproductive Genomics Compatibility Engine"
+    jurisdiction: "Global Reproductive & Premarital Compatibility Standards"
+    regulatory_framework: "ACMG / ACOG Guidelines for Reproductive Carrier Screening"
+    supported_languages:
+      - code: "en"
+        name: "English"
+        direction: "ltr"
+      - code: "ar"
+        name: "Arabic"
+        direction: "rtl"
+      - code: "fr"
+        name: "French"
+        direction: "ltr"
+      - code: "ur"
+        name: "Urdu"
+        direction: "rtl"
+      - code: "hi"
+        name: "Hindi"
+        direction: "ltr"
+    partner_facilities:
+      - id: "fac-gen-ngc"
+        name: "UAE National Genome Center"
+        city: "Abu Dhabi"
+        specialties: ["Clinical Genomics", "Reproductive Genetics", "Preimplantation Diagnostics"]
+      - id: "fac-gen-broad"
+        name: "Broad Clinical Laboratories"
+        city: "Cambridge, MA"
+        specialties: ["Variant Curation", "Targeted Sequencing", "Genomic Counseling"]
+      - id: "fac-gen-medg"
+        name: "MedGenome Center of Excellence"
+        city: "Bengaluru"
+        specialties: ["Rare Disease Diagnostics", "Population Genetics", "Carrier Panels"]
+    payer_rules:
+      - plan_code: "NATIONAL_GENOME_PROGRAM"
+        payer_name: "National Genome Mandate & Premarital Screening Grant"
+        tier_coverage: 1.00
+        copay_amount_aed: 0
+        requires_preauth: false
+        auto_approve_tiers: ["TIER_1_CRITICAL", "TIER_2_HIGH", "TIER_3_ROUTINE"]
+    acuity_rules:
+      GENOMIC_COUPLE_HBB:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 48
+        guideline: "ACMG / DoH Mandatory Premarital Compatibility Standard"
+        rationale: "Autosomal recessive co-carrier status (e.g. Beta-Thalassemia HBB or Sickle Cell HBB) carries 25% risk of affected offspring per pregnancy: urgent genetic consultation within 48 hours"
+      BREAST_BIRADS_4:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "Hereditary Cancer Risk Assessment & Diagnostic Protocol"
+        rationale: "Suspicious finding with potential BRCA1/2 or hereditary predisposition requires expedited clinical workup"
+      METABOLIC_HBA1C_RENAL:
+        tier: "TIER_3_ROUTINE"
+        sla_hours: 168
+        guideline: "Cardiometabolic Risk and Polygenic Risk Score Evaluation"
+        rationale: "Polygenic high metabolic risk requires lifestyle and preventative endocrinology consultation within 7 days"
+      COLORECTAL_FIT_POS:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "Lynch Syndrome and Polyposis Screening Protocol"
+        rationale: "FIT positivity with family history triggers expedited colonoscopy and genetic panel evaluation"
+      ELECTROLYTE_CRITICAL:
+        tier: "TIER_1_CRITICAL"
+        sla_hours: 24
+        guideline: "Channelopathy and Acute Electrolyte Hazard Protocol"
+        rationale: "Critical electrolyte abnormality presenting sudden cardiac arrhythmia hazard requires immediate intervention"
+      UROLOGY_PSA_ELEVATED:
+        tier: "TIER_2_HIGH"
+        sla_hours: 72
+        guideline: "HOXB13 and BRCA-associated Prostate Cancer Screening Protocol"
+        rationale: "Elevated PSA in hereditary risk context mandates rapid multiparametric prostate MRI and evaluation"
+    prerequisite_rules:
+      GENOMIC_COUPLE_HBB:
+        - code: "34533-0"
+          name: "Targeted Hemoglobin Variant Analysis (HPLC / Electrophoresis)"
+          mandatory: true
+        - code: "GENOM-COUPLE-PANEL"
+          name: "High-Throughput Next-Generation Carrier Screening Panel"
+          mandatory: true
+        - code: "718-7"
+          name: "Erythrocyte Indices (MCV, MCH, RDW)"
+          mandatory: true
+        - code: "GENOM-PARTNER-CONSENT"
+          name: "Bilateral Premarital Informed Genetic Consent"
+          mandatory: true
+      BREAST_BIRADS_4:
+        - code: "24606-6"
+          name: "Diagnostic Mammogram Bilateral with Tomosynthesis"
+          mandatory: true
+        - code: "24605-8"
+          name: "Targeted Breast Ultrasound Report"
+          mandatory: true
+      METABOLIC_HBA1C_RENAL:
+        - code: "4548-4"
+          name: "Hemoglobin A1c"
+          mandatory: true
+        - code: "33914-3"
+          name: "Serum Creatinine and eGFR"
+          mandatory: true
+      COLORECTAL_FIT_POS:
+        - code: "58453-2"
+          name: "Quantitative Fecal Immunochemical Test (FIT)"
+          mandatory: true
+        - code: "57021-8"
+          name: "Complete Blood Count (CBC)"
+          mandatory: true
+      ELECTROLYTE_CRITICAL:
+        - code: "2823-3"
+          name: "Stat Serum Potassium Panel"
+          mandatory: true
+        - code: "11524-6"
+          name: "12-Lead Electrocardiogram (ECG)"
+          mandatory: true
+      UROLOGY_PSA_ELEVATED:
+        - code: "2857-1"
+          name: "Total PSA Laboratory Value"
+          mandatory: true
+        - code: "10886-0"
+          name: "Free PSA Percentage"
+          mandatory: true

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CUSTODIA · Autonomous Clinical Custody & Loop-Closure OS Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ffffff;
+      color: #0f172a;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 28px;
+    }
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    h1 {
+      font-size: 19px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #059669;
+      box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.6); }
+      70% { box-shadow: 0 0 0 7px rgba(5, 150, 105, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+    }
+    .sub {
+      font-size: 11px;
+      color: #475569;
+      margin-top: 5px;
+      line-height: 1.5;
+    }
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .toolbar-actions {
+      display: none;
+      gap: 6px;
+    }
+    .toolbar.open .toolbar-actions {
+      display: flex;
+    }
+    .toolbar button {
+      font: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      color: #334155;
+    }
+    .toolbar button:hover {
+      background: #f1f5f9;
+      border-color: #64748b;
+    }
+    .diagram {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .card {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f8fafc;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .card-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .card h3 {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .card ul {
+      list-style: none;
+    }
+    .card li {
+      font-size: 10px;
+      color: #334155;
+      line-height: 1.65;
+    }
+    .foot {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 9px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    @media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+    @media print { .toolbar { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div>
+        <h1><span class="dot"></span>CUSTODIA : Autonomous Clinical Custody & Loop-Closure Platform</h1>
+        <p class="sub">
+          Global HL7 FHIR R4 Core · Deterministic YAML Acuity & 2-Phase Custody Ledger · OpenAI Strict Parse & Teach-Back · 6-Route 3D WebGL UI
+        </p>
+      </div>
+      <div class="toolbar" id="tb">
+        <div class="toolbar-actions">
+          <button onclick="copyAsImage()">📋 Copy</button>
+          <button onclick="downloadPNG()">🖼️ PNG</button>
+          <button onclick="downloadPDF()">📄 PDF</button>
+        </div>
+        <button class="toolbar-toggle" aria-label="Export" onclick="document.getElementById('tb').classList.toggle('open')">...</button>
+      </div>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1120 805" role="img" aria-label="CUSTODIA Production Architecture">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f1f5f9" stroke-width="0.9"/>
+          </pattern>
+          <marker id="arrow-slate" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#64748b"/>
+          </marker>
+          <marker id="arrow-emerald" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#059669"/>
+          </marker>
+          <marker id="arrow-rose" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#e11d48"/>
+          </marker>
+        </defs>
+
+        <rect width="1120" height="805" fill="#ffffff"/>
+        <rect width="1120" height="805" fill="url(#grid)"/>
+
+        <!-- LAYER 1: CONNECTION ARROWS (Drawn early so component masks cover intersections) -->
+        <g id="connections" fill="none" stroke="#64748b" stroke-width="1.4">
+          <line x1="165" y1="115" x2="165" y2="165" marker-end="url(#arrow-slate)"/>
+          <line x1="415" y1="115" x2="415" y2="165" marker-end="url(#arrow-slate)"/>
+          <line x1="665" y1="115" x2="665" y2="165" marker-end="url(#arrow-slate)"/>
+          <line x1="915" y1="115" x2="915" y2="165" marker-end="url(#arrow-slate)"/>
+
+          <line x1="270" y1="195" x2="310" y2="195" marker-end="url(#arrow-slate)"/>
+          <line x1="520" y1="195" x2="560" y2="195" marker-end="url(#arrow-slate)"/>
+          <line x1="770" y1="195" x2="810" y2="195" marker-end="url(#arrow-slate)"/>
+
+          <line x1="665" y1="225" x2="165" y2="290" marker-end="url(#arrow-emerald)"/>
+          <line x1="915" y1="225" x2="415" y2="290" marker-end="url(#arrow-emerald)"/>
+
+          <line x1="270" y1="320" x2="310" y2="320" stroke="#059669" marker-end="url(#arrow-emerald)"/>
+          <line x1="520" y1="320" x2="560" y2="320" stroke="#e11d48" stroke-dasharray="4,3" marker-end="url(#arrow-rose)"/>
+          <line x1="770" y1="320" x2="810" y2="320" stroke="#059669" marker-end="url(#arrow-emerald)"/>
+
+          <line x1="165" y1="350" x2="165" y2="415" marker-end="url(#arrow-slate)"/>
+          <line x1="415" y1="350" x2="415" y2="415" marker-end="url(#arrow-slate)"/>
+          <line x1="415" y1="350" x2="665" y2="415" marker-end="url(#arrow-slate)"/>
+          <line x1="415" y1="350" x2="915" y2="415" marker-end="url(#arrow-slate)"/>
+
+          <line x1="270" y1="445" x2="310" y2="445" marker-end="url(#arrow-slate)"/>
+          <line x1="520" y1="445" x2="560" y2="445" marker-end="url(#arrow-slate)"/>
+          <line x1="770" y1="445" x2="810" y2="445" marker-end="url(#arrow-slate)"/>
+
+          <line x1="165" y1="475" x2="165" y2="530" marker-end="url(#arrow-slate)"/>
+          <line x1="415" y1="475" x2="415" y2="530" marker-end="url(#arrow-slate)"/>
+          <line x1="665" y1="475" x2="665" y2="530" marker-end="url(#arrow-slate)"/>
+          <line x1="915" y1="475" x2="915" y2="530" marker-end="url(#arrow-slate)"/>
+
+          <line x1="270" y1="560" x2="310" y2="560" marker-end="url(#arrow-slate)"/>
+          <line x1="520" y1="560" x2="560" y2="560" marker-end="url(#arrow-slate)"/>
+          <line x1="770" y1="560" x2="810" y2="560" marker-end="url(#arrow-slate)"/>
+
+          <path d="M 1020 560 H 1068 V 320 H 1020" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-rose)"/>
+        </g>
+
+        <text transform="translate(1086, 440) rotate(-90)" text-anchor="middle" fill="#be123c" font-size="8" font-weight="600">
+          CLOSED-LOOP FEEDBACK: TEACH-BACK SCORES · REFERRAL ACKs · ECDSA / PASSKEY SIGNATURES
+        </text>
+
+        <!-- LAYER 2: BOUNDARY ZONES -->
+        <rect x="42" y="265" width="996" height="100" rx="10" fill="rgba(16, 185, 129, 0.04)" stroke="#059669" stroke-width="1.4" stroke-dasharray="8,4"/>
+        <rect x="58" y="256" width="535" height="16" rx="3" fill="#ffffff"/>
+        <text x="64" y="267" fill="#047857" font-size="8.5" font-weight="700">
+          03 DETERMINISTIC CUSTODY & CLINICAL GUARDRAIL CORE (ZERO LLM IN ACUITY OR CLOSURE PATH)
+        </text>
+
+        <rect x="42" y="625" width="996" height="95" rx="10" fill="rgba(225, 29, 72, 0.03)" stroke="#e11d48" stroke-width="1.4" stroke-dasharray="6,4"/>
+        <rect x="58" y="616" width="490" height="16" rx="3" fill="#ffffff"/>
+        <text x="64" y="627" fill="#be123c" font-size="8.5" font-weight="700">
+          06 CROSS-CUTTING SECURITY, DUAL-DIALECT DB & PLUGGABLE GLOBAL MARKET PACKS
+        </text>
+
+        <!-- ROW 1: 01 GLOBAL INTAKE SOURCES -->
+        <text x="60" y="44" fill="#475569" font-size="8.5" font-weight="700">01 GLOBAL INTAKE SOURCES (ANY HEALTH SYSTEM / HIE / DIAGNOSTIC LAB)</text>
+
+        <rect x="60" y="55" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="60" y="55" width="210" height="60" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="165" y="80" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Labs & LIS Feeds</text>
+        <text x="165" y="97" fill="#475569" font-size="8.5" text-anchor="middle">HL7 v2 ORU^R01 · FHIR R4 Obs</text>
+
+        <rect x="310" y="55" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="310" y="55" width="210" height="60" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="415" y="80" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Radiology & Pathology</text>
+        <text x="415" y="97" fill="#475569" font-size="8.5" text-anchor="middle">PDF Reports · BI-RADS / FIT+</text>
+
+        <rect x="560" y="55" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="560" y="55" width="210" height="60" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="665" y="80" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Hospital EHR & HIEs</text>
+        <text x="665" y="97" fill="#475569" font-size="8.5" text-anchor="middle">Malaffi · NHS · Epic · ABDM R4</text>
+
+        <rect x="810" y="55" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="810" y="55" width="210" height="60" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="915" y="80" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Screening Programs</text>
+        <text x="915" y="97" fill="#475569" font-size="8.5" text-anchor="middle">IFHAS · Cancer · Child · Genomics</text>
+
+        <rect x="355" y="130" width="120" height="20" rx="4" fill="#ffffff"/>
+        <rect x="355" y="130" width="120" height="20" rx="4" fill="#fff7ed" stroke="#ea580c" stroke-width="1"/>
+        <text x="415" y="143" fill="#c2410c" font-size="7" font-weight="600" text-anchor="middle">PDF / HL7 / FHIR Stream</text>
+
+        <!-- ROW 2: 02 INGEST, DEDUP, OPENAI EXTRACTION & NORMALIZATION -->
+        <text x="60" y="156" fill="#475569" font-size="8.5" font-weight="700">02 IDEMPOTENT INGESTION, STRICT PARSE & FHIR R4 NORMALIZATION (`/intake`)</text>
+
+        <rect x="60" y="165" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="60" y="165" width="210" height="60" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+        <text x="165" y="190" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Idempotent Interop Gate</text>
+        <text x="165" y="207" fill="#475569" font-size="8.5" text-anchor="middle">Accession Dedup · Amendment Merge</text>
+
+        <rect x="310" y="165" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="310" y="165" width="210" height="60" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="415" y="190" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">OpenAI Clinical Extractor</text>
+        <text x="415" y="207" fill="#1e40af" font-size="8.5" text-anchor="middle">gpt-4o Strict Pydantic Parse</text>
+
+        <rect x="560" y="165" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="560" y="165" width="210" height="60" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+        <text x="665" y="190" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">FHIR R4 Normalizer</text>
+        <text x="665" y="207" fill="#475569" font-size="8.5" text-anchor="middle">fhir.resources · LOINC · ICD-10</text>
+
+        <rect x="810" y="165" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="810" y="165" width="210" height="60" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+        <text x="915" y="190" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Transactional Outbox Bus</text>
+        <text x="915" y="207" fill="#c2410c" font-size="8.5" text-anchor="middle">Optimistic Lock · SSE / WS Push</text>
+
+        <!-- ROW 3: 03 DETERMINISTIC CORE ENGINE -->
+        <rect x="60" y="290" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="60" y="290" width="210" height="60" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+        <text x="165" y="315" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Acuity Rules Engine</text>
+        <text x="165" y="332" fill="#475569" font-size="8.5" text-anchor="middle">YAML Market Packs · Tier 1/2/3</text>
+
+        <rect x="310" y="290" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="310" y="290" width="210" height="60" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+        <text x="415" y="315" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">8-State Custody Ledger</text>
+        <text x="415" y="332" fill="#475569" font-size="8.5" text-anchor="middle">2-Phase Handshake · Version Lock</text>
+
+        <rect x="560" y="290" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="560" y="290" width="210" height="60" rx="6" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+        <text x="665" y="315" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Dual-Key Closure Gate</text>
+        <text x="665" y="332" fill="#be123c" font-size="8.5" text-anchor="middle">FHIR Evidence + ECDSA/Passkey</text>
+
+        <rect x="810" y="290" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="810" y="290" width="210" height="60" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="915" y="315" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Canonical Audit Chain</text>
+        <text x="915" y="332" fill="#5b21b6" font-size="8.5" text-anchor="middle">RFC 8785 JSON · SHA-256 Ledger</text>
+
+        <!-- ROW 4: 04 ORCHESTRATED CLINICAL, REFERRAL & RETENTION ACTIONS -->
+        <text x="60" y="404" fill="#475569" font-size="8.5" font-weight="700">04 ORCHESTRATED CLINICAL, REFERRAL & RETENTION ACTIONS (`/referrals`)</text>
+
+        <rect x="60" y="415" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="60" y="415" width="210" height="60" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+        <text x="165" y="440" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Pre-Flight Validator</text>
+        <text x="165" y="457" fill="#475569" font-size="8.5" text-anchor="middle">Blocks Missing Prereq Bounce</text>
+
+        <rect x="310" y="415" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="310" y="415" width="210" height="60" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="415" y="440" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">90s C2C e-Consult Card</text>
+        <text x="415" y="457" fill="#1e40af" font-size="8.5" text-anchor="middle">Post-Verified FHIR ID Citations</text>
+
+        <rect x="560" y="415" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="560" y="415" width="210" height="60" rx="6" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+        <text x="665" y="440" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Slot & Payer Pre-Auth</text>
+        <text x="665" y="457" fill="#b45309" font-size="8.5" text-anchor="middle">FHIR Schedule · Auto CPT/ICD</text>
+
+        <rect x="810" y="415" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="810" y="415" width="210" height="60" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="915" y="440" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Drop-Off Hazard Engine</text>
+        <text x="915" y="457" fill="#1e40af" font-size="8.5" text-anchor="middle">Survival Risk + Friction Breaker</text>
+
+        <!-- ROW 5: 05 MULTI-ROUTE 3D WEBGL EXPERIENCE & OMNICHANNEL -->
+        <text x="60" y="519" fill="#475569" font-size="8.5" font-weight="700">05 MULTI-ROUTE 3D WEBGL WORKSTATIONS & PATIENT COMPANION</text>
+
+        <rect x="60" y="530" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="60" y="530" width="210" height="60" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="165" y="555" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Patient Companion Portal</text>
+        <text x="165" y="572" fill="#0e7490" font-size="8.5" text-anchor="middle">/companion · 3D Organ + Teach-Back</text>
+
+        <rect x="310" y="530" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="310" y="530" width="210" height="60" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="415" y="555" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Clinician Cockpit</text>
+        <text x="415" y="572" fill="#0e7490" font-size="8.5" text-anchor="middle">/workstation · e-Consult + PoC Sign</text>
+
+        <rect x="560" y="530" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="560" y="530" width="210" height="60" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="665" y="555" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">3D WebGL Command Center</text>
+        <text x="665" y="572" fill="#0e7490" font-size="8.5" text-anchor="middle">/command · 3D Custody Lattice</text>
+
+        <rect x="810" y="530" width="210" height="60" rx="6" fill="#ffffff"/>
+        <rect x="810" y="530" width="210" height="60" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="915" y="555" fill="#0f172a" font-size="11" font-weight="600" text-anchor="middle">Voice & Chat Channels</text>
+        <text x="915" y="572" fill="#475569" font-size="8.5" text-anchor="middle">Whisper + TTS-1 · Web Speech</text>
+
+        <!-- ROW 6: 06 TRUST, DATA & MARKET PACKS -->
+        <rect x="60" y="650" width="180" height="55" rx="6" fill="#ffffff"/>
+        <rect x="60" y="650" width="180" height="55" rx="6" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+        <text x="150" y="674" fill="#0f172a" font-size="10" font-weight="600" text-anchor="middle">Consent & Privacy</text>
+        <text x="150" y="690" fill="#be123c" font-size="8" text-anchor="middle">HIPAA · GDPR · PDPL · DPDP</text>
+
+        <rect x="256" y="650" width="180" height="55" rx="6" fill="#ffffff"/>
+        <rect x="256" y="650" width="180" height="55" rx="6" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+        <text x="346" y="674" fill="#0f172a" font-size="10" font-weight="600" text-anchor="middle">Passkey & WebCrypto</text>
+        <text x="346" y="690" fill="#be123c" font-size="8" text-anchor="middle">WebAuthn + ECDSA P-256 Sign</text>
+
+        <rect x="452" y="650" width="180" height="55" rx="6" fill="#ffffff"/>
+        <rect x="452" y="650" width="180" height="55" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="542" y="674" fill="#0f172a" font-size="10" font-weight="600" text-anchor="middle">Dual-Dialect DB</text>
+        <text x="542" y="690" fill="#5b21b6" font-size="8" text-anchor="middle">Supabase PG16 / Async SQLite</text>
+
+        <rect x="648" y="650" width="180" height="55" rx="6" fill="#ffffff"/>
+        <rect x="648" y="650" width="180" height="55" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+        <text x="738" y="674" fill="#0f172a" font-size="10" font-weight="600" text-anchor="middle">Audit & Safety Trace</text>
+        <text x="738" y="690" fill="#475569" font-size="8" text-anchor="middle">/ledger · Citation Verifier</text>
+
+        <rect x="844" y="650" width="180" height="55" rx="6" fill="#ffffff"/>
+        <rect x="844" y="650" width="180" height="55" rx="6" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+        <text x="934" y="674" fill="#0f172a" font-size="10" font-weight="600" text-anchor="middle">Global Market Packs</text>
+        <text x="934" y="690" fill="#b45309" font-size="8" text-anchor="middle">UAE · US · NHS · India · Genomics</text>
+
+        <!-- LAYER 3: LEGEND (Strictly outside all boundaries at y=748) -->
+        <g id="legend" transform="translate(42, 748)">
+          <rect x="0" y="0" width="996" height="42" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+          <rect x="16" y="15" width="12" height="12" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="1.3"/>
+          <text x="34" y="24" fill="#334155" font-size="8.5" font-weight="500">External / Channel</text>
+
+          <rect x="150" y="15" width="12" height="12" rx="2" fill="#ecfdf5" stroke="#059669" stroke-width="1.3"/>
+          <text x="168" y="24" fill="#334155" font-size="8.5" font-weight="500">Deterministic Core</text>
+
+          <rect x="295" y="15" width="12" height="12" rx="2" fill="#eff6ff" stroke="#2563eb" stroke-width="1.3"/>
+          <text x="313" y="24" fill="#334155" font-size="8.5" font-weight="500">OpenAI Strict Parse</text>
+
+          <rect x="440" y="15" width="12" height="12" rx="2" fill="#fff1f2" stroke="#e11d48" stroke-width="1.3"/>
+          <text x="458" y="24" fill="#334155" font-size="8.5" font-weight="500">Security / Closure Gate</text>
+
+          <rect x="600" y="15" width="12" height="12" rx="2" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.3"/>
+          <text x="618" y="24" fill="#334155" font-size="8.5" font-weight="500">Data & Hash Ledger</text>
+
+          <rect x="742" y="15" width="12" height="12" rx="2" fill="#ecfeff" stroke="#0891b2" stroke-width="1.3"/>
+          <text x="760" y="24" fill="#334155" font-size="8.5" font-weight="500">6-Route 3D UI</text>
+
+          <rect x="855" y="15" width="12" height="12" rx="2" fill="#fffbeb" stroke="#d97706" stroke-width="1.3"/>
+          <text x="873" y="24" fill="#334155" font-size="8.5" font-weight="500">Market / Payer Pack</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#059669"></div>
+          <h3>1. Neuro-Symbolic Clinical Safety</h3>
+        </div>
+        <ul>
+          <li>• <strong>OpenAI extracts, translates & cites:</strong> Pydantic strict JSON extraction, multilingual Teach-Back, and FHIR-cited e-Consult cards.</li>
+          <li>• <strong>Deterministic rules govern:</strong> Acuity tier, SLA countdowns, prerequisite lab checks, and closure gates never rely on LLM guesswork.</li>
+          <li>• <strong>Canonical Hash Ledger:</strong> Every state transition and custody handoff is RFC 8785 SHA-256 hash-chained with optimistic locking.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#2563eb"></div>
+          <h3>2. Worldwide Scale via Market Packs</h3>
+        </div>
+        <ul>
+          <li>• <strong>HL7 FHIR R4 Native Core:</strong> Built for US (Epic/Cerner), UK (NHS), India (ABDM), and UAE (Malaffi/Sahatna).</li>
+          <li>• <strong>Hot-Swappable Market Packs:</strong> Switch clinical guidelines, payer pre-auth rules, and local dialects via configuration.</li>
+          <li>• <strong>Genomics Pack Included:</strong> Premarital couple compatibility runs seamlessly as a specialized Market Pack on the same engine.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#e11d48"></div>
+          <h3>3. Zero-Orphan Custody & Dual-Key Closure</h3>
+        </div>
+        <ul>
+          <li>• <strong>Two-Phase Custody Handshake:</strong> Originating provider retains active SLA liability until receiving specialist signs acceptance.</li>
+          <li>• <strong>Dual-Key Proof-of-Closure:</strong> Requires both a machine-verified FHIR resource and a verified WebAuthn/ECDSA P-256 signature.</li>
+          <li>• <strong>Impeccable 6-Route 3D UX:</strong> React Three Fiber 3D custody topology and 3D anatomical explainers with 2D vector fallback.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>CUSTODIA · AUTONOMOUS SCREENING-TO-CARE CLINICAL CUSTODY PLATFORM · SYSTEM ARCHITECTURE</span>
+      <span>NOV 2026 · FHIR R4 · OPENAI STRICT PARSE · REACT THREE FIBER · SYNTHETIC PHI SAFE</span>
+    </div>
+  </div>
+
+  <script>
+    function cap() {
+      var r = document.getElementById('report-container').getBoundingClientRect(), p = 32;
+      return html2canvas(document.body, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        x: r.left + window.scrollX - p,
+        y: r.top + window.scrollY - p,
+        width: r.width + 2 * p,
+        height: r.height + 2 * p,
+        ignoreElements: function(e) { return e.classList && e.classList.contains('toolbar'); }
+      });
+    }
+    async function copyAsImage() {
+      try {
+        var c = await cap();
+        c.toBlob(function(b) { navigator.clipboard.write([new ClipboardItem({'image/png': b})]); });
+      } catch (e) {
+        alert('Clipboard copy requires HTTPS/localhost and a user gesture. Use PNG export instead.');
+      }
+    }
+    async function downloadPNG() {
+      var c = await cap(), a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = 'custodia-architecture.png';
+      a.click();
+    }
+    async function downloadPDF() {
+      var c = await cap(), J = window.jspdf.jsPDF, w = c.width / 2, h = c.height / 2;
+      var d = new J({ orientation: w > h ? 'l' : 'p', unit: 'px', format: [w, h] });
+      d.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+      d.save('custodia-architecture.pdf');
+    }
+  </script>
+</body>
+</html>
