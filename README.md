@@ -10,6 +10,7 @@
 [![Next.js 15](https://img.shields.io/badge/Frontend-Next.js_15.1.6-000000.svg?style=flat-square)](https://nextjs.org)
 [![WebCrypto ECDSA](https://img.shields.io/badge/Cryptography-WebCrypto_ECDSA_P--256-6366f1.svg?style=flat-square)](https://www.w3.org/TR/WebCryptoAPI/)
 [![RFC 8785](https://img.shields.io/badge/Audit_Chain-RFC_8785_SHA--256-e11d48.svg?style=flat-square)](https://datatracker.ietf.org/doc/html/rfc8785)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdhruvtalnewar01%2FCustodia---Future-Health-Care-Challenge-&project-name=custodia-healthcare&repository-name=custodia-healthcare&root-directory=frontend)
 [![License](https://img.shields.io/badge/License-Proprietary_Enterprise-slate.svg?style=flat-square)](LICENSE)
 
 <br/>
@@ -216,6 +217,24 @@ Idempotent document ingestion extracting LOINC codes, ICD-10 diagnoses, and prer
 - **Interoperability**: HL7 FHIR R4 schema compliance, LOINC, ICD-10
 - **Auditing**: RFC 8785 Canonical JSON, SHA-256 Merkle-style hash chaining
 - **Reasoning**: Structured JSON clinical parsing with fallback rule engines
+
+---
+
+## Deploy to Vercel
+
+CUSTODIA is fully optimized for one-click deployment to Vercel with zero configuration:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdhruvtalnewar01%2FCustodia---Future-Health-Care-Challenge-&project-name=custodia-healthcare&repository-name=custodia-healthcare&root-directory=frontend)
+
+### Quick Vercel Setup Steps:
+1. **Import Repository**: In Vercel, select `dhruvtalnewar01/Custodia---Future-Health-Care-Challenge-`.
+2. **Root Directory**: Choose `frontend` (or leave as root; both are pre-configured).
+3. **Environment Variables**:
+   * `OPENAI_API_KEY`: *(Recommended)* Powers live GPT-4o Care Companion and Clinical Navigator.
+   * `BACKEND_URL`: *(Optional)* Link your external FastAPI backend if deployed on Render or Railway.
+4. **Deploy**: Click **Deploy** to launch your live production environment in under 60 seconds.
+
+For in-depth deployment details, refer to the [Vercel Deployment Guide](VERCEL_DEPLOYMENT_GUIDE.md).
 
 ---
 

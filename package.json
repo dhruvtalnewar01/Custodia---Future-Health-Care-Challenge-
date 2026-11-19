@@ -1,0 +1,12 @@
+{
+  "name": "custodia-clinical-os",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CUSTODIA: Autonomous Clinical Screening-to-Care Custody System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "lint": "npm --prefix frontend run lint"
+  }
+}
