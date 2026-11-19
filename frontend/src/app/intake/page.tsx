@@ -39,7 +39,7 @@ const PRESET_SAMPLES: PresetSample[] = [
     accession: "ACC-MAMMO-401",
     status: "FINAL",
     mrn: "MRN-UAE-001",
-    patientName: "Fatima Al-Mansoor",
+    patientName: "Sophia Bennett",
     hasVisual: true,
     text: `CLINICAL INDICATION: Annual screening mammography.
 FINDINGS: The breast parenchyma is heterogeneously dense, which may obscure small masses. In the upper outer quadrant of the right breast at 10:00 position, 5 cm from the nipple, there is a newly identified irregular, hypoechoic focal mass measuring 1.4 cm with indistinct margins. No associated clustered microcalcifications. No suspicious axillary lymphadenopathy.
@@ -110,7 +110,7 @@ COUPLE MATCH STATUS: Partner carrier status evaluation required. If partner also
     accession: "ACC-MAMMO-401",
     status: "AMENDED",
     mrn: "MRN-UAE-001",
-    patientName: "Fatima Al-Mansoor",
+    patientName: "Sophia Bennett",
     hasVisual: true,
     text: `AMENDED REPORT - ADDENDUM TO ACCESSION ACC-MAMMO-401
 PREVIOUS REPORT STATUS: FINAL

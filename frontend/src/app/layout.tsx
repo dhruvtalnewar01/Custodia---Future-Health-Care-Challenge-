@@ -5,6 +5,7 @@ import { MarketPackProvider } from "@/contexts/MarketPackContext";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { TimeWarpProvider } from "@/contexts/TimeWarpContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { DataModeProvider } from "@/contexts/DataModeContext";
 import { AppLayoutShell } from "@/components/layout/AppLayoutShell";
 
 export const metadata: Metadata = {
@@ -30,15 +31,17 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[#F8FAFC] text-[#0F172A] antialiased selection:bg-emerald-500/20 selection:text-emerald-700">
         <LanguageProvider>
-          <ThemeProvider>
-            <MarketPackProvider>
-              <RoleProvider>
-                <TimeWarpProvider>
-                  <AppLayoutShell>{children}</AppLayoutShell>
-                </TimeWarpProvider>
-              </RoleProvider>
-            </MarketPackProvider>
-          </ThemeProvider>
+          <DataModeProvider>
+            <ThemeProvider>
+              <MarketPackProvider>
+                <RoleProvider>
+                  <TimeWarpProvider>
+                    <AppLayoutShell>{children}</AppLayoutShell>
+                  </TimeWarpProvider>
+                </RoleProvider>
+              </MarketPackProvider>
+            </ThemeProvider>
+          </DataModeProvider>
         </LanguageProvider>
       </body>
     </html>

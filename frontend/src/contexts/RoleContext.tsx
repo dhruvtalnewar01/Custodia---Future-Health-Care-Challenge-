@@ -57,7 +57,7 @@ export const ROLES: Record<UserRole, RoleDetail> = {
     badge: "Patient Portal",
     description: "Explore 3D anatomical explainers, complete multilingual voice/chat teach-back, and book pre-authorized appointments.",
     clinicianId: "PAT-SELF",
-    clinicianName: "Fatma Al-Mansoor",
+    clinicianName: "Sophia Bennett",
     facility: "Custodia Patient Companion",
   },
 };

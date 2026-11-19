@@ -11,13 +11,15 @@ import {
   AuditBlock,
 } from "@/lib/api";
 import { generateDemoLoopsForPack } from "@/lib/demoData";
-import { rotateDemographicProfile, getPatientForCase } from "@/lib/demographics";
+import { getPatientForCase } from "@/lib/demographics";
 import { signProofOfClosure } from "@/lib/crypto";
 import { useMarketPack } from "@/contexts/MarketPackContext";
 import { useTimeWarp } from "@/contexts/TimeWarpContext";
 import { useRole } from "@/contexts/RoleContext";
+import { useDataMode } from "@/contexts/DataModeContext";
 import {
   ShieldAlert,
+  ShieldCheck,
   Clock,
   ArrowRight,
   CheckCircle2,
@@ -38,6 +40,9 @@ import {
   Fingerprint,
   Eye,
   Users,
+  Zap,
+  Plus,
+  X,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -66,6 +71,26 @@ function WorkstationContent() {
   const { activePack } = useMarketPack();
   const { timeWarpHours } = useTimeWarp();
   const { currentRole } = useRole();
+  const {
+    dataMode,
+    setDataMode,
+    isLiveMode,
+    liveLoops,
+    createLiveLoop,
+    showQuickIntakeModal,
+    setShowQuickIntakeModal,
+  } = useDataMode();
+
+  // Quick Live Case modal form state
+  const [livePatientName, setLivePatientName] = useState("Sophia Bennett");
+  const [liveMrn, setLiveMrn] = useState("MRN-LIVE-9021");
+  const [liveModality, setLiveModality] = useState("Screening Mammography");
+  const [liveFindingCategory, setLiveFindingCategory] = useState("BREAST_BIRADS_4");
+  const [liveAcuityTier, setLiveAcuityTier] = useState<"TIER_1_CRITICAL" | "TIER_2_HIGH" | "TIER_3_ROUTINE">("TIER_2_HIGH");
+  const [liveOrderingPcp, setLiveOrderingPcp] = useState("Dr. Sarah Jenkins, MD");
+  const [liveSpecialist, setLiveSpecialist] = useState("Dr. Claire Montgomery (Surgical Oncology)");
+  const [liveSlaHours, setLiveSlaHours] = useState(24);
+  const [liveSummary, setLiveSummary] = useState("1.4 cm hypoechoic focal mass in upper outer quadrant requiring targeted follow-up.");
 
   const [loops, setLoops] = useState<ScreeningLoop[]>([]);
   const [selectedLoop, setSelectedLoop] = useState<ScreeningLoop | null>(null);
@@ -92,6 +117,19 @@ function WorkstationContent() {
   const fetchLoops = async () => {
     setLoading(true);
     try {
+      if (dataMode === "live") {
+        setLoops(liveLoops);
+        if (liveLoops.length > 0) {
+          const target = liveLoops.find((l) => l.loop_code === caseIdParam || l.id === caseIdParam) || liveLoops[0];
+          loadCaseDetails(target.loop_code);
+        } else {
+          setSelectedLoop(null);
+          setPatientData(null);
+          setFhirResources([]);
+          setAuditBlocks([]);
+        }
+        return;
+      }
       const data = await api.getLoops({ market_pack_id: activePack?.id });
       const list = data && data.length > 0 ? data : generateDemoLoopsForPack(activePack?.id || "pack-uae-doh");
       setLoops(list);
@@ -116,7 +154,24 @@ function WorkstationContent() {
 
   useEffect(() => {
     fetchLoops();
-  }, [activePack?.id]);
+  }, [activePack?.id, dataMode, liveLoops]);
+
+  const handleCreateLiveCase = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newLoop = createLiveLoop({
+      patient_name: livePatientName,
+      mrn: liveMrn,
+      modality: liveModality,
+      finding_category: liveFindingCategory,
+      clinical_summary: liveSummary,
+      acuity_tier: liveAcuityTier,
+      ordering_pcp: liveOrderingPcp,
+      target_specialist: liveSpecialist,
+      sla_target_hours: Number(liveSlaHours),
+    });
+    setShowQuickIntakeModal(false);
+    selectCase(newLoop);
+  };
 
   // Load detailed case data
   const loadCaseDetails = async (idOrCode: string) => {
@@ -318,65 +373,155 @@ function WorkstationContent() {
 
   return (
     <div className="flex flex-col gap-6 p-6 lg:p-8 max-w-[1780px] mx-auto w-full">
-      {/* Top Spotlight Quick Selector */}
+      {/* Top Spotlight / SaaS Mode Quick Bar */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-mono font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-cyan-500" />
-            Spotlight Interactive Clinical Cases:
+            {isLiveMode ? "Live SaaS Custody Workspace:" : "Spotlight Interactive Clinical Cases:"}
           </span>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                rotateDemographicProfile();
-                fetchLoops();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-mono font-extrabold hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer"
-              title="Rotate demographic cohorts and switch patient/clinician names"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Rotate Demographic Names</span>
-            </button>
-            <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-              6 Pre-Configured Test Cohorts
-            </span>
+            {isLiveMode ? (
+              <>
+                <button
+                  onClick={() => setShowQuickIntakeModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-extrabold shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Register a live patient screening case"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Input Live Case</span>
+                </button>
+                <button
+                  onClick={() => setDataMode("demo")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-mono font-extrabold hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  <span>Switch to Demo Cohort</span>
+                </button>
+                <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-lg border border-emerald-300">
+                  {liveLoops.length} Live Cases (0 Mock)
+                </span>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setDataMode("live")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-extrabold shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Switch to live production environment with zero pre-input data"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Switch to Live SaaS Mode</span>
+                </button>
+                <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
+                  6 Pre-Configured Test Cohorts
+                </span>
+              </>
+            )}
           </div>
         </div>
+
+        {/* Case Selector Pills */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {SPOTLIGHT_CODES.map((code) => {
-            const isSel = selectedLoop?.loop_code === code;
-            return (
-              <button
-                key={code}
-                onClick={() => loadCaseDetails(code)}
-                className={`px-4 py-3 rounded-2xl text-left border transition-all flex flex-col justify-between shadow-sm ${
-                  isSel
-                    ? "bg-emerald-600 text-white border-emerald-500 shadow-lg scale-[1.02]"
-                    : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700"
-                }`}
-              >
-                <span className="text-xs sm:text-sm font-mono font-black">{code}</span>
-                <span className={`text-xs truncate font-bold mt-1 ${isSel ? "text-emerald-100" : "text-slate-500 dark:text-slate-400"}`}>
-                  {code === "LOOP-UAE-401"
-                    ? "Breast BI-RADS 4"
-                    : code === "LOOP-UAE-402"
-                    ? "Critical K+ 6.4"
-                    : code === "LOOP-UAE-403"
-                    ? "HbA1c 9.2% Renal"
-                    : code === "LOOP-US-404"
-                    ? "FIT+ High Hazard"
-                    : code === "LOOP-GEN-405"
-                    ? "Genomics HBB"
-                    : "PSA Elevated"}
-                </span>
-              </button>
-            );
-          })}
+          {isLiveMode ? (
+            liveLoops.length === 0 ? (
+              <div className="col-span-full p-4 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 text-xs font-mono font-bold flex items-center justify-between">
+                <span>Pristine SaaS Slate Active: Zero pre-input cases. Click &quot;+ Input Live Case&quot; to register your first screening.</span>
+                <button
+                  onClick={() => setShowQuickIntakeModal(true)}
+                  className="px-3 py-1 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 text-xs font-bold transition-all cursor-pointer"
+                >
+                  + Add First Case
+                </button>
+              </div>
+            ) : (
+              liveLoops.map((l) => {
+                const isSel = selectedLoop?.loop_code === l.loop_code;
+                return (
+                  <button
+                    key={l.loop_code}
+                    onClick={() => selectCase(l)}
+                    className={`px-4 py-3 rounded-2xl text-left border transition-all flex flex-col justify-between shadow-sm cursor-pointer ${
+                      isSel
+                        ? "bg-emerald-600 text-white border-emerald-500 shadow-lg scale-[1.02]"
+                        : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-400"
+                    }`}
+                  >
+                    <span className="text-xs sm:text-sm font-mono font-black">{l.loop_code}</span>
+                    <span className={`text-xs truncate font-bold mt-1 ${isSel ? "text-emerald-100" : "text-slate-500"}`}>
+                      {l.patient?.full_name || l.finding_category}
+                    </span>
+                  </button>
+                );
+              })
+            )
+          ) : (
+            SPOTLIGHT_CODES.map((code) => {
+              const isSel = selectedLoop?.loop_code === code;
+              return (
+                <button
+                  key={code}
+                  onClick={() => loadCaseDetails(code)}
+                  className={`px-4 py-3 rounded-2xl text-left border transition-all flex flex-col justify-between shadow-sm cursor-pointer ${
+                    isSel
+                      ? "bg-emerald-600 text-white border-emerald-500 shadow-lg scale-[1.02]"
+                      : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700"
+                  }`}
+                >
+                  <span className="text-xs sm:text-sm font-mono font-black">{code}</span>
+                  <span className={`text-xs truncate font-bold mt-1 ${isSel ? "text-emerald-100" : "text-slate-500 dark:text-slate-400"}`}>
+                    {code === "LOOP-UAE-401"
+                      ? "Breast BI-RADS 4"
+                      : code === "LOOP-UAE-402"
+                      ? "Critical K+ 6.4"
+                      : code === "LOOP-UAE-403"
+                      ? "HbA1c 9.2% Renal"
+                      : code === "LOOP-US-404"
+                      ? "FIT+ High Hazard"
+                      : code === "LOOP-GEN-405"
+                      ? "Genomics HBB"
+                      : "PSA Elevated"}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Main Two-Column Triage Queue & Deep Case Workstation */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {loops.length === 0 ? (
+        <div className="liquid-glass-elevated rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-12 lg:p-16 flex flex-col items-center justify-center text-center gap-6 my-4 shadow-xl">
+          <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/15">
+            <ShieldCheck className="w-10 h-10" />
+          </div>
+          <div className="max-w-xl flex flex-col gap-2">
+            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 self-center border border-emerald-300">
+              PRISTINE SAAS WORKSPACE ACTIVE
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Live Production Custody Slate
+            </h3>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+              You are currently operating in Live SaaS Mode with zero pre-input or mock cases. Register your own patient screening case to start deterministic 8-stage custody tracking.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setShowQuickIntakeModal(true)}
+              className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Input Live Clinical Case</span>
+            </button>
+            <button
+              onClick={() => setDataMode("demo")}
+              className="px-5 py-3.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-100 transition-all cursor-pointer"
+            >
+              <span>Explore Demo Cohort</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column (4 cols): Priority SLA Triage Queue */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           <div className="liquid-glass-elevated rounded-3xl border border-white/90 shadow-xl shadow-slate-200/30 p-5 flex flex-col gap-4">
@@ -860,6 +1005,169 @@ function WorkstationContent() {
           )}
         </div>
       </div>
+      )}
+
+      {/* Quick Live Case Intake Modal */}
+      {showQuickIntakeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
+                    Register Live Clinical Screening Case
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Input your real patient data to initiate deterministic 8-stage custody tracking
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowQuickIntakeModal(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateLiveCase} className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Patient Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={livePatientName}
+                    onChange={(e) => setLivePatientName(e.target.value)}
+                    placeholder="e.g. Sophia Bennett"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Medical Record Number (MRN)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={liveMrn}
+                    onChange={(e) => setLiveMrn(e.target.value)}
+                    placeholder="e.g. MRN-LIVE-9021"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Screening Modality
+                  </label>
+                  <select
+                    value={liveModality}
+                    onChange={(e) => setLiveModality(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="Screening Mammography">Screening Mammography</option>
+                    <option value="Fecal Immunochemical Test (FIT)">Fecal Immunochemical Test (FIT)</option>
+                    <option value="Low-Dose Chest CT">Low-Dose Chest CT</option>
+                    <option value="Thyroid Ultrasound">Thyroid Ultrasound</option>
+                    <option value="Chemistry STAT Panel">Chemistry STAT Panel</option>
+                    <option value="Premarital Genomic Panel">Premarital Genomic Panel</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Finding Category
+                  </label>
+                  <select
+                    value={liveFindingCategory}
+                    onChange={(e) => setLiveFindingCategory(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="BREAST_BIRADS_4">BREAST_BIRADS_4 (Suspicious Mass)</option>
+                    <option value="COLORECTAL_FIT_POS">COLORECTAL_FIT_POS (Occult Bleeding)</option>
+                    <option value="LUNG_RADS_4">LUNG_RADS_4 (Suspicious Nodule)</option>
+                    <option value="THYROID_TI_RADS_5">THYROID_TI_RADS_5 (High Suspicion)</option>
+                    <option value="ELECTROLYTE_CRITICAL">ELECTROLYTE_CRITICAL (STAT Potassium)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Acuity Tier & Target SLA
+                  </label>
+                  <select
+                    value={liveAcuityTier}
+                    onChange={(e: any) => {
+                      const val = e.target.value;
+                      setLiveAcuityTier(val);
+                      if (val === "TIER_1_CRITICAL") setLiveSlaHours(2);
+                      else if (val === "TIER_2_HIGH") setLiveSlaHours(24);
+                      else setLiveSlaHours(336);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="TIER_1_CRITICAL">Tier 1 Critical (&lt; 2h SLA)</option>
+                    <option value="TIER_2_HIGH">Tier 2 High (&lt; 24h SLA)</option>
+                    <option value="TIER_3_ROUTINE">Tier 3 Routine (&lt; 336h SLA)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                    Ordering Clinician
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={liveOrderingPcp}
+                    onChange={(e) => setLiveOrderingPcp(e.target.value)}
+                    placeholder="e.g. Dr. Sarah Jenkins, MD"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">
+                  Clinical Impression / Findings Summary
+                </label>
+                <textarea
+                  rows={3}
+                  value={liveSummary}
+                  onChange={(e) => setLiveSummary(e.target.value)}
+                  placeholder="Clinical diagnostic report findings..."
+                  className="w-full p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickIntakeModal(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/25 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Launch Custody Loop</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -33,7 +33,7 @@ SPOTLIGHT_CONFIGS = [
     {
         "loop_code": "LOOP-UAE-401",
         "mrn": "MRN-UAE-401",
-        "full_name": "Fatma Al-Mansoor",
+        "full_name": "Sophia Bennett",
         "age": 46,
         "sex": "Female",
         "preferred_language": "ar",

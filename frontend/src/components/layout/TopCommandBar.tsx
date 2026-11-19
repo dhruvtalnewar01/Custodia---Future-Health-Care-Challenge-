@@ -7,7 +7,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useMarketPack } from "@/contexts/MarketPackContext";
 import { useRole, ROLES, UserRole } from "@/contexts/RoleContext";
 import { useTimeWarp } from "@/contexts/TimeWarpContext";
-import { rotateDemographicProfile } from "@/lib/demographics";
+import { useDataMode } from "@/contexts/DataModeContext";
 import {
   Activity,
   Shield,
@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Globe,
   RefreshCw,
+  Zap,
 } from "lucide-react";
 
 export function TopCommandBar() {
@@ -29,6 +30,7 @@ export function TopCommandBar() {
   const { activePackId, activePack, allPacks, setActivePackId } = useMarketPack();
   const { role, roleDetail, setRole } = useRole();
   const { timeOffsetHours, setTimeOffsetHours, warpLabel } = useTimeWarp();
+  const { dataMode, toggleDataMode } = useDataMode();
 
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -274,17 +276,20 @@ export function TopCommandBar() {
             )}
           </div>
 
-          {/* Quick Demographic Cohort Switcher */}
+          {/* Live SaaS / Demo Cohort Toggle */}
           <button
-            onClick={() => {
-              rotateDemographicProfile();
-              window.location.reload();
-            }}
-            className="flex items-center gap-1.5 h-8.5 px-2.5 rounded-xl text-xs font-bold border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 transition-colors shadow-xs cursor-pointer"
-            title="Rotate through diverse demographic patient and clinician identities"
+            onClick={toggleDataMode}
+            className={`flex items-center gap-1.5 h-8.5 px-3 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer shadow-xs ${
+              dataMode === "live"
+                ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/30 glow-emerald"
+                : "border-indigo-300 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900"
+            }`}
+            title={dataMode === "live" ? "Live SaaS Mode Active (0 mock data). Click to switch to Demo." : "Demo Cohort Active. Click to switch to Live SaaS."}
           >
-            <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="text-[11px] font-mono font-bold hidden xl:inline">Switch Names</span>
+            <Zap className={`w-3.5 h-3.5 ${dataMode === "live" ? "text-white animate-pulse" : "text-amber-500"}`} />
+            <span className="hidden xl:inline">
+              {dataMode === "live" ? "LIVE SAAS ACTIVE" : "SWITCH TO LIVE"}
+            </span>
           </button>
 
           {/* Theme Switcher */}

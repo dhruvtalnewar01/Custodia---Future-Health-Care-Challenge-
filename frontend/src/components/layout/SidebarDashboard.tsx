@@ -27,12 +27,14 @@ import {
   LogOut,
   ArrowRight,
   RefreshCw,
+  Zap,
+  Plus,
 } from "lucide-react";
 import { useMarketPack } from "@/contexts/MarketPackContext";
 import { useRole, ROLES, UserRole } from "@/contexts/RoleContext";
 import { useTimeWarp } from "@/contexts/TimeWarpContext";
 import { useLanguage, LanguageCode } from "@/contexts/LanguageContext";
-import { rotateDemographicProfile } from "@/lib/demographics";
+import { useDataMode } from "@/contexts/DataModeContext";
 
 export function SidebarDashboard() {
   const pathname = usePathname();
@@ -40,6 +42,7 @@ export function SidebarDashboard() {
   const { role, setRole, roleDetail } = useRole();
   const { timeOffsetHours, setTimeOffsetHours, warpLabel } = useTimeWarp();
   const { language, setLanguage, direction, t, languages } = useLanguage();
+  const { dataMode, setDataMode, setShowQuickIntakeModal } = useDataMode();
 
   const [packModalOpen, setPackModalOpen] = useState(false);
   const [langModalOpen, setLangModalOpen] = useState(false);
@@ -337,18 +340,53 @@ export function SidebarDashboard() {
             </div>
           </div>
 
-          {/* Quick Demographic Switcher Action */}
-          <button
-            onClick={() => {
-              rotateDemographicProfile();
-              window.location.reload();
-            }}
-            className="w-full h-8 px-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-            title="Rotate demographic identities & patient names"
-          >
-            <RefreshCw className="w-3 h-3 text-emerald-600" />
-            <span>Switch Demographic Names</span>
-          </button>
+          {/* Live SaaS Mode / Demo Cohort Switcher */}
+          {dataMode === "demo" ? (
+            <div className="p-2.5 rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 to-blue-50/40 shadow-2xs flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-black text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  DEMO COHORT ACTIVE
+                </span>
+                <span className="text-[9px] font-mono font-bold text-slate-400">Pre-Input</span>
+              </div>
+              <button
+                onClick={() => setDataMode("live")}
+                className="w-full h-8 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer group"
+                title="Switch to live production SaaS with 0 mock data"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span>Switch to Live SaaS Mode</span>
+              </button>
+            </div>
+          ) : (
+            <div className="p-2.5 rounded-2xl border border-emerald-300/90 bg-gradient-to-br from-emerald-50/90 to-teal-50/40 shadow-2xs flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  LIVE SAAS MODE
+                </span>
+                <span className="text-[9px] font-mono font-bold text-emerald-700">0 Mock Data</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => setShowQuickIntakeModal(true)}
+                  className="h-7 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-mono font-bold flex items-center justify-center gap-1 shadow-2xs transition-all"
+                  title="Create your own live clinical screening case"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Live Case</span>
+                </button>
+                <button
+                  onClick={() => setDataMode("demo")}
+                  className="h-7 px-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-[10px] font-mono font-bold flex items-center justify-center transition-all"
+                  title="Switch back to demo cohort"
+                >
+                  <span>Demo Mode</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Primary Navigation Menu */}

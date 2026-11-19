@@ -47,7 +47,7 @@ export const DEMOGRAPHIC_COHORTS: Record<string, DemographicCohort> = {
       {
         id: "pat-uae-101",
         mrn: "MRN-UAE-401",
-        full_name: "Fatma Al-Mansoor",
+        full_name: "Sophia Bennett",
         age: 46,
         sex: "Female",
         preferred_language: "ar",
@@ -569,7 +569,7 @@ export const DEMOGRAPHIC_COHORTS: Record<string, DemographicCohort> = {
       {
         id: "pat-gen-102",
         mrn: "MRN-GEN-902",
-        full_name: "Rashid & Fatima Al-Nuaimi",
+        full_name: "Julian & Clara Sterling",
         age: 29,
         sex: "Male",
         preferred_language: "ar",

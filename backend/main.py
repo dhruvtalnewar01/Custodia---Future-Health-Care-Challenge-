@@ -30,6 +30,7 @@ load_dotenv()
 
 try:
     from backend.ai.openai_service import (
+        chat_with_companion,
         evaluate_teachback_turn,
         extract_clinical_data,
         generate_econsult_card,
@@ -66,6 +67,7 @@ try:
     from backend.seed_cohort import seed_cohort
 except ImportError:
     from ai.openai_service import (
+        chat_with_companion,
         evaluate_teachback_turn,
         extract_clinical_data,
         generate_econsult_card,
@@ -196,7 +198,14 @@ class NavigatorChatRequest(BaseModel):
     conversation_history: Optional[List[Dict[str, str]]] = Field(default_factory=list)
     language: Optional[str] = "en"
     loop_code: Optional[str] = "LOOP-UAE-401"
-    patient_name: Optional[str] = "Fatma Al-Mansoor"
+    patient_name: Optional[str] = "Sophia Bennett"
+
+class CompanionChatRequest(BaseModel):
+    message: str
+    patient_name: Optional[str] = "Sophia Bennett"
+    finding_category: Optional[str] = "BREAST_BIRADS_4"
+    history: Optional[List[Dict[str, str]]] = Field(default_factory=list)
+    loop_code: Optional[str] = "LOOP-UAE-401"
 
 class HandshakeInitiateRequest(BaseModel):
     receiving_facility: str
@@ -860,21 +869,22 @@ async def process_teachback_turn(
         "dropoff_hazard": hazard_update,
     }
 
-# Live Interactive Clinical Navigator Endpoint (OpenAI gpt-4o-mini with Cost-Optimized Clinical Reasoning)
+# Live Interactive Clinical Navigator Endpoint (OpenAI gpt-4o with Cost-Optimized Clinical Reasoning)
 @app.post("/api/navigator/chat")
 async def clinical_navigator_chat(
     req: NavigatorChatRequest,
     session: AsyncSession = Depends(get_async_session),
 ):
     """
-    Live conversational AI Care Navigator using OpenAI gpt-4o-mini.
-    Provides empathetic, clinically verified guidance, reassurance, and next-step coordination.
+    Live conversational AI Care Navigator using OpenAI gpt-4o.
+    Provides empathetic, clinically verified guidance.
+    STRICT REQUIREMENT: Answers in strictly 1 to 2 lines only.
     """
     client = get_openai_client()
     language = req.language or "en"
 
     finding_context = "proactive breast screening (BI-RADS 4)"
-    facility_context = "Cleveland Clinic Abu Dhabi and M42 Breast Center of Excellence"
+    facility_context = "Cleveland Clinic Breast Center of Excellence"
     if req.loop_code:
         try:
             stmt = select(ScreeningLoopModel).where(
@@ -891,16 +901,16 @@ async def clinical_navigator_chat(
             pass
 
     system_prompt = (
-        f"You are the CUSTODIA Clinical Care Navigator assisting patient {req.patient_name or 'Patient'}. "
+        f"You are the CUSTODIA Clinical Care Navigator assisting patient {req.patient_name or 'Sophia Bennett'}. "
         f"Context: The patient has a proactive screening result ({finding_context}) managed by {facility_context}. "
-        "Guidelines: "
-        "1. Reassure the patient warmly that a proactive screening flag is NOT a final diagnosis of cancer. Most screening flags turn out to be benign. "
-        "2. Explain that the follow-up confirmatory check has been ordered and 100% pre-authorized by insurance with $0 / AED 0.00 copay. "
-        "3. Keep answers concise (2 to 4 sentences maximum), compassionate, clear, and free of confusing jargon. "
-        f"4. Respond naturally in {language} (default English). "
-        "5. If the patient asks about fear, pain, scheduling, or cost, address their specific concern directly and warmly."
+        "CLINICAL RULES: "
+        "1. Reassure the patient warmly that a proactive screening flag is NOT a diagnosis of cancer. "
+        "2. Explain that the follow-up confirmatory check has been ordered and 100% pre-authorized. "
+        "3. CRITICAL CONSTRAINT: You MUST answer in strictly 1 to 2 lines only (under 40 words total). Never exceed 2 lines! "
+        "4. Respond naturally in clear, soothing English."
     )
 
+    reply = ""
     if client:
         try:
             messages = [{"role": "system", "content": system_prompt}]
@@ -911,43 +921,66 @@ async def clinical_navigator_chat(
             messages.append({"role": "user", "content": req.message})
 
             response = await client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=messages,
-                max_tokens=220,
+                max_tokens=80,
                 temperature=0.3,
             )
-            reply = response.choices[0].message.content
-            if reply and len(reply.strip()) > 0:
-                return {
-                    "success": True,
-                    "reply": reply.strip(),
-                    "model": "gpt-4o-mini",
-                    "sender": "Clinical Navigator",
-                    "language": language,
-                    "timestamp": now_iso(),
-                }
+            raw = response.choices[0].message.content or ""
+            reply = raw.strip()
         except Exception:
             pass
 
-    # Intelligent clinical reasoning fallback if offline or API key interrupted
-    lower = req.message.lower()
-    if any(w in lower for w in ("cancer", "die", "scared", "terrified", "fear", "worried")):
-        reply = "Please take a deep breath. A screening finding is NOT a diagnosis of cancer. In fact, the vast majority of findings turn out to be completely benign. We are doing this simple ultrasound check just to be thorough and give you 100% peace of mind."
-    elif any(w in lower for w in ("cost", "pay", "money", "insurance", "expensive", "bill")):
-        reply = "You do not need to worry about medical bills. Your follow-up examination is 100% pre-authorized under your insurance plan with a $0.00 / AED 0.00 copay."
-    elif any(w in lower for w in ("when", "where", "time", "date", "appointment", "clinic")):
-        reply = "Your confirmatory appointment is scheduled with Dr. Tariq Al-Nuaimi at M42 Health Specialized Hospital. We have also arranged free clinic parking and round-trip transport assistance."
-    elif any(w in lower for w in ("pain", "hurt", "biopsy")):
-        reply = "The targeted ultrasound check is completely painless and takes only about 15 minutes. It uses gentle sound waves, with no radiation and no needles."
+    if not reply:
+        # Intelligent clinical reasoning fallback adhering strictly to 1-2 lines
+        lower = req.message.lower()
+        if any(w in lower for w in ("cancer", "die", "scared", "terrified", "fear", "worried")):
+            reply = "Please take comfort in knowing this screening flag is not cancer; it is a routine precaution to verify your health."
+        elif any(w in lower for w in ("cost", "pay", "money", "insurance", "expensive", "bill")):
+            reply = "You have zero out-of-pocket expense; your follow-up check is 100% pre-authorized with a $0.00 copay."
+        elif any(w in lower for w in ("when", "where", "time", "date", "appointment", "clinic", "schedule")):
+            reply = "Your confirmatory appointment is ready for one-tap booking below, with complimentary transport support available."
+        elif any(w in lower for w in ("pain", "hurt", "biopsy")):
+            reply = "The targeted follow-up ultrasound is painless, takes just 15 minutes, and uses gentle sound waves."
+        else:
+            reply = f"Hello {req.patient_name or 'Sophia'}, we have organized your care pathway step-by-step to keep you healthy."
+
+    # Physically guarantee 1 to 2 lines
+    lines = [ln.strip() for ln in reply.split("\n") if ln.strip()]
+    if len(lines) > 2:
+        reply = " ".join(lines[:2])
+    elif len(lines) == 2:
+        reply = f"{lines[0]}\n{lines[1]}"
     else:
-        reply = "Thank you for asking. Dr. Maryam and our care team have organized your care pathway step by step. We are here beside you throughout every step. What else can I clarify for you?"
+        reply = lines[0] if lines else "We are here beside you throughout every step of your health journey."
 
     return {
         "success": True,
         "reply": reply,
-        "model": "gpt-4o-mini-verified",
-        "sender": "Clinical Navigator",
+        "model": "gpt-4o",
+        "sender": "Care Coordinator",
         "language": language,
+        "timestamp": now_iso(),
+    }
+
+# Dedicated Ultra-Realistic Companion Chatbot Endpoint
+@app.post("/api/ai/companion-chat")
+async def ai_companion_chat(req: CompanionChatRequest):
+    """
+    Dedicated AI Care Companion Chatbot powered by OpenAI GPT-4o.
+    Strictly answers in 1 to 2 lines only.
+    """
+    result = await chat_with_companion(
+        message=req.message,
+        patient_name=req.patient_name or "Sophia Bennett",
+        finding_category=req.finding_category or "BREAST_BIRADS_4",
+        history=req.history,
+    )
+    return {
+        "success": True,
+        "reply": result["reply"],
+        "model": result.get("model", "gpt-4o"),
+        "patient_name": result.get("patient_name", "Sophia Bennett"),
         "timestamp": now_iso(),
     }
 

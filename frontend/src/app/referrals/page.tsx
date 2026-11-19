@@ -393,7 +393,7 @@ export default function ReferralsPage() {
                       {
                         id: "SLOT-01",
                         facility: "Cleveland Clinic Abu Dhabi",
-                        specialist: "Dr. Fatima Al-Zahra (Breast Surgical Oncology)",
+                        specialist: "Dr. Claire Montgomery (Breast Surgical Oncology)",
                         time: "Tomorrow, 09:30 AM",
                         slotsLeft: 2,
                       },

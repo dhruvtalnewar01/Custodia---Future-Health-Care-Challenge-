@@ -221,7 +221,7 @@ export function HeroCommandBanner({
       case "PATIENT":
         return {
           title: "Personal Custody Care Path & Companion",
-          subtitle: "Fatma Al-Mansoor | Empowered Health Journey. Explore 3D anatomical organ explainers, complete conversational comprehension teach-back, and confirm pre-authorized visits.",
+          subtitle: "Sophia Bennett | Empowered Health Journey. Explore 3D anatomical organ explainers, complete conversational comprehension teach-back, and confirm pre-authorized visits.",
           badge: "Patient Portal & Companion",
           kpis: [
             {
