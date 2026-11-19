@@ -5,7 +5,7 @@
   "description": "CUSTODIA: Autonomous Clinical Screening-to-Care Custody System",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend install && npm --prefix frontend run build && node -e \"const fs=require('fs'); if (fs.existsSync('frontend/.next')) fs.cpSync('frontend/.next', '.next', {recursive: true});\"",
+    "build": "npm --prefix frontend install --loglevel=error && npm --prefix frontend run build && node -e \"const fs=require('fs'); if (fs.existsSync('frontend/.next')) fs.cpSync('frontend/.next', '.next', {recursive: true});\"",
     "start": "npm --prefix frontend run start",
     "lint": "npm --prefix frontend run lint"
   },
